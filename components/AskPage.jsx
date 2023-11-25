@@ -5,13 +5,67 @@ import { useState } from "react";
 import Typewriter from "typewriter-effect";
 import Lottie from "lottie-react";
 import beansLoading from "@/public/beans-loading.json";
+import tear from "@/public/tear.json";
+import { motion } from "framer-motion";
+import Image from "next/image";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
+const imageIds = [
+  "IMG_3314.png",
+  "IMG_3315.png",
+  "IMG_3316.png",
+  "IMG_3317.jpeg",
+  "IMG_3318.jpeg",
+  "IMG_3320.png",
+  "IMG_3321.png",
+  "IMG_3322.png",
+  "IMG_3323.png",
+  "IMG_3324.png",
+  "IMG_3325.png",
+  "IMG_3326.png",
+  "IMG_3327.png",
+  "IMG_3328.png",
+  "IMG_3329.png",
+  "IMG_3330.png",
+  "IMG_3331.png",
+  "IMG_3332.png",
+  "IMG_3333.png",
+  "IMG_3334.png",
+  "IMG_3335.png",
+  "IMG_3336.png",
+  "IMG_3337.png",
+  "IMG_3338.png",
+  "IMG_3339.png",
+  "IMG_3340.png",
+  "IMG_3341.png",
+  "IMG_3342.png",
+  "IMG_3343.png",
+];
+
 export default function AskPage() {
   const [question, setQuestion] = useState("");
+  const [askedQuestion, setAskedQuestion] = useState("");
   const [response, setResponse] = useState("");
   const [loading, setLoading] = useState(false);
+  const [images, setImages] = useState([]);
+
+  const getRandomImages = () => {
+    let shuffled = imageIds.sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 4).map((url) => ({
+      src: `https://dumb.nyc3.cdn.digitaloceanspaces.com/${url}`,
+      isVisible: false,
+    }));
+  };
+
+  const toggleImageVisibility = (index) => {
+    setImages(
+      images.map((img, i) => {
+        if (i === index) img.isVisible = !img.isVisible;
+        return img;
+      })
+    );
+  };
 
   const suggestedQuestions = [
     "Why did Creigh do that?",
@@ -25,6 +79,8 @@ export default function AskPage() {
   };
 
   const handleFlow = async () => {
+    setAskedQuestion(question);
+    setQuestion("");
     setResponse(null);
     setLoading(true);
     await askQuestion();
@@ -38,6 +94,7 @@ export default function AskPage() {
       if (status === "completed") {
         clearInterval(intervalId); // Stop checking
         await getMessage();
+        setImages(getRandomImages());
       } else {
         attempts++;
         if (attempts >= maxAttempts) {
@@ -100,6 +157,9 @@ export default function AskPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    images.map((image) => {
+      image.isVisible = false;
+    });
     // Handle the submission
     // For example, setResponse("Some response from the server");
     //await askQuestion();
@@ -114,8 +174,10 @@ export default function AskPage() {
       {/* Further increased bottom padding */}
       {/* Response Display Section */}
       {response && (
-        <div className="mb-4 flex-1 overflow-auto p-4 bg-gray-800 rounded-md">
-          <h2 className="mb-4 text-lg font-semibold">Question: {question}</h2>
+        <div className="mb-4 flex-1 overflow-auto p-4 bg-gray-800 rounded-md max-h-[62vh]">
+          <h2 className="mb-4 text-lg font-semibold">
+            Question: {askedQuestion}
+          </h2>
           <h2 className="mb-4 text-lg font-semibold">Response:</h2>
           {/* <p>{response || "Your response will appear here."}</p> */}
           <Typewriter
@@ -124,11 +186,37 @@ export default function AskPage() {
                 .changeDelay(10)
                 .typeString(response)
                 .callFunction(() => {
+                  setImages(
+                    images.map((img) => {
+                      img.isVisible = true;
+                      return img;
+                    })
+                  );
                   console.log("String typed out!");
                 })
                 .start();
             }}
           />
+          <div className="flex flex-wrap justify-center mt-4">
+            {images.map((img, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={img.isVisible ? { opacity: 1, scale: 1 } : {}}
+                transition={{ duration: 0.5 }}
+                className="w-1/2 p-2"
+                onClick={() => toggleImageVisibility(index)}
+              >
+                <Image
+                  width={500}
+                  height={500}
+                  src={img.src}
+                  alt={`image-${index}`}
+                  className="w-full h-52 cursor-pointer rounded-lg object-cover"
+                />
+              </motion.div>
+            ))}
+          </div>
         </div>
       )}
       {/* {!response && (
@@ -150,6 +238,20 @@ export default function AskPage() {
               >
                 <Lottie
                   animationData={beansLoading}
+                  loop={true}
+                  style={{ width: "300px", height: "300px" }} // Adjust size as needed
+                />
+              </div>
+            </div>
+          )}
+          {!loading && (
+            <div className="flex justify-center items-center h-full w-full">
+              <div
+                className="flex justify-center items-center"
+                style={{ height: "100%", width: "100%" }}
+              >
+                <Lottie
+                  animationData={tear}
                   loop={true}
                   style={{ width: "300px", height: "300px" }} // Adjust size as needed
                 />
